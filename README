@@ -1,0 +1,90 @@
+
+LPCGDB
+
+Introduction
+
+This project was created as a means to enable fast, cheap and robust debugging of
+embedded targets such as ARM, BlackFin and others.
+By using a LPC214x chip alot of necessary functionality is already there, such as
+USB, UART and a bunch of I/O pins.
+The idea is that someone should be able to just buy 2 LPC prototype boards and use
+one of them to debug the other via USB and gdb. (Also using MXDB)
+
+
+Features
+
+JTAG
+	ARM7 (r4 atleast)
+	ARM920T
+	BF533
+
+FLASH Programming:
+	LPC21x using ISP/IAP?
+
+
+GDB remote protocol.
+Extended remote protocol. (A binary protocol for faster data rates, used by MXDB)
+
+
+
+
+
+LPC2138 board pins:
+
+J3:
+19: RTCK
+20: TDO
+21: TDI
+22: TCK
+23: TMS
+24: TRST
+27: GND
+
+10pin   20pin
+1 VCC   1 VCC
+2 nTRST 3 nTRST
+3 TDI   5 TDI
+4 TMS   7 TMS
+5 TCK   9 TCK
+6 TDO   13 TDO
+7 nRST  15 nRST
+8 GND   Even pins GND
+9 GND   Even pins GND
+10 GND  Even pins GND
+
+
+
+Example how to load and run something on the gp2x:
+
+(gdb) file <myelf.elf>
+(gdb) set debug remote 1
+(gdb) target remote /dev/ttyACM0
+CTRL-C
+(gdb) monitor mmuoff
+(gdb) monitor ll@0x100
+(gdb) load
+(gdb) c
+
+
+Exmplanation of the "monitor" command.
+It sends a command to the GDB stub as a string.
+Commands implemented are: "ll", "mmuoff", "mmuon", "id", "targets", "flash", "lpcfreq"
+
+"ll" Loads a small binary into the target RAM at the specified address, and then starts the core at that address.
+The small program can read/write target memory communicate through a special debug register that can be read/written from JTAG while the processor is running.
+Makes reading/writing memory alot faster.
+It's important that the mmu is either off, or that you really know what you're doing regarding virtual addresses and cache.
+Also that you don't overwrite the "ll" program with your binary.
+
+"mmuoff" makes sure the MMU is turned off.
+
+"mmuon" Does nothing useful atm.
+
+"id" returns the idcode to GDB
+
+"targets" returns the supported targets.
+
+"flash" instantiates a flash driver, only lpc supported atm.
+
+"lpcfreq" is used by the lpc flash driver internally, it's the lpc's crystal frequency in kHz (iirc)
+
